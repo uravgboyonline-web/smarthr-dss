@@ -1,0 +1,97 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String         @id @default(uuid())
+  name          String
+  email         String         @unique
+  password      String
+  role          String         // admin, hr, manager, leader, employee
+  evaluations   Evaluation[]
+  auditLogs     AuditLog[]
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+}
+
+model Employee {
+  id            String         @id @default(uuid())
+  employeeCode  String         @unique
+  name          String
+  position      String
+  department    String
+  joinDate      DateTime
+  status        String         // Aktif / Nonaktif
+  evaluations   Evaluation[]
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+}
+
+model Indicator {
+  id                String             @id @default(uuid())
+  name              String
+  type              String             // Kinerja / Perilaku
+  weight            Float
+  description       String?
+  evaluationDetails EvaluationDetail[]
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+}
+
+model EvaluationPeriod {
+  id          String       @id @default(uuid())
+  periodName  String       // e.g., "Q1 2026"
+  startDate   DateTime
+  endDate     DateTime
+  status      String       // aktif / closed
+  evaluations Evaluation[]
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+}
+
+model Evaluation {
+  id              String             @id @default(uuid())
+  employeeId      String
+  employee        Employee           @relation(fields: [employeeId], references: [id])
+  evaluatorId     String
+  evaluator       User               @relation(fields: [evaluatorId], references: [id])
+  periodId        String
+  period          EvaluationPeriod   @relation(fields: [periodId], references: [id])
+  totalScore      Float              @default(0)
+  recommendation  String?
+  notes           String?
+  details         EvaluationDetail[]
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+}
+
+model EvaluationDetail {
+  id             String      @id @default(uuid())
+  evaluationId   String
+  evaluation     Evaluation  @relation(fields: [evaluationId], references: [id], onDelete: Cascade)
+  indicatorId    String
+  indicator      Indicator   @relation(fields: [indicatorId], references: [id])
+  score          Float
+  weightedScore  Float
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+}
+
+model AuditLog {
+  id          String    @id @default(uuid())
+  userId      String?
+  user        User?     @relation(fields: [userId], references: [id])
+  action      String
+  entity      String
+  entityId    String?
+  description String?
+  createdAt   DateTime  @default(now())
+}
