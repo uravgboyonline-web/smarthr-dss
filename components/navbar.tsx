@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useSession } from "next-auth/react";
 import { Bell, Menu, User as UserIcon, X } from "lucide-react";
 import { Sidebar } from "./sidebar";
 
