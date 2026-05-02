@@ -92,11 +92,11 @@ export function DashboardClient({
   };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 md:space-y-8">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Dashboard</h1>
+          <h1 className="text-2xl md:text-3xl font-bold text-foreground">Dashboard</h1>
           <p className="text-muted-foreground mt-1">
             Ringkasan sistem penilaian kinerja DSS.
           </p>
@@ -117,13 +117,13 @@ export function DashboardClient({
       </div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
         {kpis.map((kpi) => {
           const Icon = kpi.icon;
           return (
             <div
               key={kpi.title}
-              className="bg-card border border-border rounded-2xl p-6 flex items-center gap-5 shadow-lg shadow-black/10 transition-transform hover:scale-[1.02]"
+              className="bg-card border border-border rounded-2xl p-4 md:p-6 flex items-center gap-4 md:gap-5 shadow-lg shadow-black/10 transition-transform hover:scale-[1.02]"
             >
               <div
                 className={`p-3.5 rounded-xl ${kpi.iconBg} flex items-center justify-center`}
@@ -146,7 +146,7 @@ export function DashboardClient({
       {/* Bottom Section */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Karyawan Terbaik */}
-        <div className="lg:col-span-2 bg-card border border-border rounded-2xl p-6 shadow-lg shadow-black/10">
+        <div className="lg:col-span-2 bg-card border border-border rounded-2xl p-4 md:p-6 shadow-lg shadow-black/10">
           <div className="flex items-center gap-2 mb-6">
             <Trophy className="w-5 h-5 text-amber-400" />
             <h2 className="text-lg font-bold text-foreground">
@@ -222,7 +222,7 @@ export function DashboardClient({
         </div>
 
         {/* Skor per Departemen */}
-        <div className="bg-card border border-border rounded-2xl p-6 shadow-lg shadow-black/10">
+        <div className="bg-card border border-border rounded-2xl p-4 md:p-6 shadow-lg shadow-black/10">
           <div className="flex items-center gap-2 mb-6">
             <TrendingUp className="w-5 h-5 text-primary" />
             <h2 className="text-lg font-bold text-foreground">
