@@ -33,23 +33,23 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8">
-      <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="flex justify-center text-primary">
-          <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center">
-            <Shield className="w-8 h-8" />
+    <div className="min-h-screen bg-background flex items-center justify-center p-4">
+      <div className="w-full max-w-sm">
+        <div className="text-center mb-10">
+          <div className="flex justify-center text-primary mb-4">
+            <div className="w-14 h-14 bg-primary/10 rounded-2xl flex items-center justify-center border border-primary/20 shadow-inner">
+              <Shield className="w-8 h-8" />
+            </div>
           </div>
+          <h2 className="text-3xl font-extrabold text-foreground tracking-tight">
+            SmartHR DSS
+          </h2>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Sistem Penilaian Kinerja Karyawan Berbasis Perilaku
+          </p>
         </div>
-        <h2 className="mt-6 text-center text-3xl font-extrabold text-foreground">
-          SmartHR DSS
-        </h2>
-        <p className="mt-2 text-center text-sm text-muted-foreground">
-          Sistem Penilaian Kinerja Karyawan Berbasis Perilaku
-        </p>
-      </div>
 
-      <div className="mt-8 mx-auto w-full max-w-md">
-        <div className="bg-card py-8 px-6 shadow-lg shadow-black/10 rounded-2xl sm:px-10 border border-border">
+        <div className="bg-card py-8 px-6 shadow-2xl shadow-black/20 rounded-3xl border border-border">
           <form className="space-y-6" onSubmit={handleLogin}>
             {error && (
               <div className="bg-red-500/10 text-red-400 p-3 rounded-lg text-sm font-medium border border-red-500/30">
