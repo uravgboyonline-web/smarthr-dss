@@ -33,7 +33,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-background flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <div className="flex justify-center text-primary">
           <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center">
@@ -48,8 +48,8 @@ export default function LoginPage() {
         </p>
       </div>
 
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-card py-8 px-4 shadow-lg shadow-black/10 sm:rounded-2xl sm:px-10 border border-border">
+      <div className="mt-8 mx-auto w-full max-w-md">
+        <div className="bg-card py-8 px-6 shadow-lg shadow-black/10 rounded-2xl sm:px-10 border border-border">
           <form className="space-y-6" onSubmit={handleLogin}>
             {error && (
               <div className="bg-red-500/10 text-red-400 p-3 rounded-lg text-sm font-medium border border-red-500/30">
