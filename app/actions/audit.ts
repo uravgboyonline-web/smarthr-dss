@@ -16,7 +16,7 @@ export async function createAuditLog(data: {
         action: data.action,
         entity: data.entity,
         entityId: data.entityId,
-        details: data.details,
+        description: data.details,
       },
     });
   } catch (error) {
