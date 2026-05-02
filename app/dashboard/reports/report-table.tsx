@@ -22,7 +22,7 @@ export function ReportTable({
   const [filterDept, setFilterDept] = useState("");
   const [expandedRow, setExpandedRow] = useState<string | null>(null);
 
-  const departments = [...new Set(reports.map((r: any) => r.department))];
+  const departments = Array.from(new Set(reports.map((r: any) => r.department)));
 
   const filtered = reports.filter((r: any) => {
     const matchSearch =
