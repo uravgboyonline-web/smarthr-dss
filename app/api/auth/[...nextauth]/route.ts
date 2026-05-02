@@ -12,6 +12,7 @@ export const authOptions: NextAuthOptions = {
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
+          console.log("Login failed: Missing credentials");
           return null;
         }
 
@@ -20,14 +21,16 @@ export const authOptions: NextAuthOptions = {
         });
 
         if (!user) {
+          console.log("Login failed: User not found", credentials.email);
           return null;
         }
 
-        // Dummy check for prototype: usually you'd use bcrypt.compare(credentials.password, user.password)
         if (credentials.password !== user.password) {
+          console.log("Login failed: Password mismatch for", credentials.email);
           return null;
         }
 
+        console.log("Login success for:", user.email);
         return {
           id: user.id,
           name: user.name,
