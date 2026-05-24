@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useSession } from "next-auth/react";
-import { Bell, Menu, User as UserIcon, X } from "lucide-react";
+import { Menu, User as UserIcon, X } from "lucide-react";
 import { Sidebar } from "./sidebar";
 
 export function Navbar() {
@@ -34,11 +34,6 @@ export function Navbar() {
         </div>
 
         <div className="flex items-center gap-2 md:gap-4">
-          <button className="p-2 text-muted-foreground hover:bg-accent rounded-lg relative">
-            <Bell className="w-5 h-5" />
-            <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border-2 border-card"></span>
-          </button>
-          <div className="h-8 w-px bg-border mx-1"></div>
           <div className="flex items-center gap-3">
             <div className="hidden sm:block text-right">
               <div className="text-sm font-medium text-foreground">{name}</div>

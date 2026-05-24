@@ -9,8 +9,8 @@ import {
   Target, 
   ClipboardCheck, 
   BarChart3, 
-  Settings,
-  LogOut
+  LogOut,
+  BrainCircuit
 } from "lucide-react";
 
 export function Sidebar() {
@@ -24,7 +24,6 @@ export function Sidebar() {
     { name: "Indikator", href: "/dashboard/indicators", icon: Target, roles: ["admin", "hr"] },
     { name: "Penilaian", href: "/dashboard/evaluations", icon: ClipboardCheck, roles: ["admin", "hr", "manager"] },
     { name: "Laporan", href: "/dashboard/reports", icon: BarChart3, roles: ["admin", "hr", "manager", "leader"] },
-    { name: "Pengaturan", href: "/dashboard/settings", icon: Settings, roles: ["admin"] },
   ];
 
   const filteredMenu = menuItems.filter(item => item.roles.includes(role));
@@ -42,7 +41,9 @@ export function Sidebar() {
       <div className="flex-1 overflow-y-auto py-4">
         <nav className="space-y-1 px-3">
           {filteredMenu.map((item) => {
-            const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
+            const isActive = item.href === "/dashboard" 
+              ? pathname === "/dashboard" 
+              : pathname === item.href || pathname.startsWith(`${item.href}/`);
             const Icon = item.icon;
             
             return (

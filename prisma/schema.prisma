@@ -16,6 +16,7 @@ model User {
   email         String         @unique
   password      String
   role          String         // admin, hr, manager, leader, employee
+  employee      Employee?
   evaluations   Evaluation[]
   auditLogs     AuditLog[]
   createdAt     DateTime       @default(now())
@@ -30,6 +31,8 @@ model Employee {
   department    String
   joinDate      DateTime
   status        String         // Aktif / Nonaktif
+  userId        String?        @unique
+  user          User?          @relation(fields: [userId], references: [id])
   evaluations   Evaluation[]
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
@@ -38,9 +41,11 @@ model Employee {
 model Indicator {
   id                String             @id @default(uuid())
   name              String
-  type              String             // Kinerja / Perilaku
+  type              String             // Kinerja / Perilaku / Leadership
   weight            Float
   description       String?
+  status            String             @default("Aktif") // Aktif / Nonaktif
+  evaluationMethod  String             @default("Manual") // Manual / AI / Hybrid
   evaluationDetails EvaluationDetail[]
   createdAt         DateTime           @default(now())
   updatedAt         DateTime           @updatedAt
@@ -68,9 +73,13 @@ model Evaluation {
   totalScore      Float              @default(0)
   recommendation  String?
   notes           String?
+  method          String             @default("Manual") // Manual / AI
+  aiAnalysis      String?            @db.Text
   details         EvaluationDetail[]
   createdAt       DateTime           @default(now())
   updatedAt       DateTime           @updatedAt
+
+  @@unique([employeeId, periodId])
 }
 
 model EvaluationDetail {

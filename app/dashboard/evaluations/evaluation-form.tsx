@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
-import { createEvaluation } from "@/app/actions/evaluation";
+import { useState, useEffect } from "react";
+import { createEvaluation, checkExistingEvaluation } from "@/app/actions/evaluation";
 import { useSession } from "next-auth/react";
+import { AlertCircle } from "lucide-react";
 
 export function EvaluationForm({ 
   employees, 
@@ -36,6 +37,35 @@ export function EvaluationForm({
     { value: "11", label: "November" },
     { value: "12", label: "Desember" },
   ];
+
+  const [isEdit, setIsEdit] = useState(false);
+
+  useEffect(() => {
+    async function loadExisting() {
+      if (!selectedEmployee || !selectedYear || !selectedMonth) {
+        setIsEdit(false);
+        setScores({});
+        setNotes("");
+        return;
+      }
+      
+      const existing = await checkExistingEvaluation(selectedEmployee, parseInt(selectedYear), parseInt(selectedMonth));
+      if (existing) {
+        setIsEdit(true);
+        setNotes(existing.notes || "");
+        const loadedScores: Record<string, number> = {};
+        existing.details.forEach((d: any) => {
+          loadedScores[d.indicatorId] = d.score;
+        });
+        setScores(loadedScores);
+      } else {
+        setIsEdit(false);
+        setScores({});
+        setNotes("");
+      }
+    }
+    loadExisting();
+  }, [selectedEmployee, selectedYear, selectedMonth]);
 
   const handleScoreChange = (indicatorId: string, value: string) => {
     const numValue = parseInt(value);
@@ -84,34 +114,43 @@ export function EvaluationForm({
 
   const previewScore = parseFloat(calculatePreviewScore());
   const getRecommendation = () => {
-    if (previewScore >= 85) return { label: "Promosi", color: "text-emerald-400" };
-    if (previewScore >= 70) return { label: "Reward", color: "text-blue-400" };
-    if (previewScore >= 55) return { label: "Pertahankan", color: "text-amber-400" };
-    return { label: "Pelatihan", color: "text-red-400" };
+    if (previewScore >= 85) return { label: "Promosi", color: "text-emerald-700 bg-emerald-50 border-emerald-200" };
+    if (previewScore >= 70) return { label: "Reward", color: "text-blue-700 bg-blue-50 border-blue-200" };
+    if (previewScore >= 55) return { label: "Pertahankan", color: "text-amber-700 bg-amber-50 border-amber-200" };
+    return { label: "Pelatihan", color: "text-red-700 bg-red-50 border-red-200" };
   };
 
+  const activeIndicators = indicators.filter(i => i.status !== "Nonaktif");
+  const kinerjaInd = activeIndicators.filter(i => i.type === "Kinerja");
+  const perilakuInd = activeIndicators.filter(i => i.type === "Perilaku");
+
   return (
-    <div className="bg-card border border-border rounded-2xl shadow-lg shadow-black/10 p-6">
-      <div className="mb-6">
-        <h2 className="text-xl font-bold text-foreground">Input Penilaian Baru</h2>
-        <p className="text-sm text-muted-foreground mt-1">Formulir evaluasi kinerja dan perilaku karyawan.</p>
+    <div className="bg-white border border-slate-100 rounded-[2.5rem] shadow-sm shadow-indigo-900/5 p-6 md:p-10">
+      <div className="mb-8 border-b border-slate-100 pb-6">
+        <h2 className="text-2xl font-black text-slate-900">Input Penilaian Manual</h2>
+        <p className="text-slate-500 mt-2">Formulir evaluasi kinerja, perilaku, dan leadership karyawan secara manual.</p>
       </div>
 
       {success && (
-        <div className="mb-6 p-4 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 rounded-lg text-sm font-medium">
-          ✓ Penilaian berhasil disimpan!
+        <div className="mb-8 p-5 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-2xl font-bold flex items-center gap-3 animate-fade-in">
+          <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center">✓</div>
+          Penilaian berhasil disimpan ke database!
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      {isEdit && !success && (
+        <div className="mb-8 p-5 bg-amber-50 border border-amber-200 text-amber-700 rounded-2xl text-sm font-semibold flex items-center gap-3 animate-fade-in">
+          <AlertCircle className="w-5 h-5 text-amber-600" />
+          Karyawan ini sudah dinilai pada periode tersebut. Menyimpan akan menimpa data lama.
+        </div>
+      )}
+
+      <form onSubmit={handleSubmit} className="space-y-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="md:col-span-1">
-            <label className="block text-sm font-medium text-foreground mb-1">Karyawan</label>
-            <select 
-              required
-              value={selectedEmployee}
-              onChange={(e) => setSelectedEmployee(e.target.value)}
-              className="w-full border border-border bg-background rounded-lg px-3 py-2 text-foreground focus:ring-2 focus:ring-primary/50 focus:border-primary"
+            <label className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 block ml-1">Karyawan</label>
+            <select required value={selectedEmployee} onChange={(e) => setSelectedEmployee(e.target.value)}
+              className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-slate-800 font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all shadow-inner"
             >
               <option value="">Pilih Karyawan...</option>
               {employees.map(emp => (
@@ -120,12 +159,9 @@ export function EvaluationForm({
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-foreground mb-1">Bulan</label>
-            <select 
-              required
-              value={selectedMonth}
-              onChange={(e) => setSelectedMonth(e.target.value)}
-              className="w-full border border-border bg-background rounded-lg px-3 py-2 text-foreground focus:ring-2 focus:ring-primary/50 focus:border-primary"
+            <label className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 block ml-1">Bulan</label>
+            <select required value={selectedMonth} onChange={(e) => setSelectedMonth(e.target.value)}
+              className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-slate-800 font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all shadow-inner"
             >
               {months.map(m => (
                 <option key={m.value} value={m.value}>{m.label}</option>
@@ -133,12 +169,9 @@ export function EvaluationForm({
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-foreground mb-1">Tahun</label>
-            <select 
-              required
-              value={selectedYear}
-              onChange={(e) => setSelectedYear(e.target.value)}
-              className="w-full border border-border bg-background rounded-lg px-3 py-2 text-foreground focus:ring-2 focus:ring-primary/50 focus:border-primary"
+            <label className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 block ml-1">Tahun</label>
+            <select required value={selectedYear} onChange={(e) => setSelectedYear(e.target.value)}
+              className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-slate-800 font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all shadow-inner"
             >
               {years.map(y => (
                 <option key={y} value={y}>{y}</option>
@@ -147,86 +180,86 @@ export function EvaluationForm({
           </div>
         </div>
 
-        <div className="pt-4 border-t border-border">
-          <h3 className="font-semibold text-foreground mb-4">Input Skor Indikator (0-100)</h3>
+        <div className="pt-6 border-t border-slate-100">
+          <h3 className="text-lg font-black text-slate-800 mb-6">Input Skor Indikator (0-100)</h3>
           
-          <div className="space-y-6">
-            <div>
-              <h4 className="text-sm font-medium text-blue-400 uppercase tracking-wider mb-3">Indikator Kinerja</h4>
-              <div className="grid grid-cols-1 gap-4">
-                {indicators.filter(i => i.type === "Kinerja").map(ind => (
-                  <div key={ind.id} className="flex items-center gap-4 bg-background/50 p-3 rounded-lg border border-border">
-                    <div className="flex-1">
-                      <div className="text-sm font-medium text-foreground">{ind.name}</div>
-                      <div className="text-xs text-muted-foreground">Bobot: {ind.weight}%</div>
+          <div className="space-y-8">
+            {kinerjaInd.length > 0 && (
+              <div>
+                <h4 className="text-sm font-bold text-blue-600 uppercase tracking-wider mb-4 flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-blue-500"></span> Indikator Kinerja
+                </h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {kinerjaInd.map(ind => (
+                    <div key={ind.id} className="flex items-center gap-4 bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                      <div className="flex-1">
+                        <div className="font-bold text-slate-800">{ind.name}</div>
+                        {ind.description && <div className="text-xs text-slate-500 mt-1">{ind.description}</div>}
+                        <div className="text-xs font-bold text-indigo-600 mt-2 bg-indigo-50 inline-block px-2 py-0.5 rounded-md">Bobot: {ind.weight}%</div>
+                      </div>
+                      <input type="number" min="0" max="100" required
+                        value={scores[ind.id] ?? ""}
+                        onChange={(e) => handleScoreChange(ind.id, e.target.value)}
+                        className="w-24 px-4 py-3 border border-slate-200 bg-slate-50 rounded-xl text-center font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="0" />
                     </div>
-                    <input 
-                      type="number" 
-                      min="0" max="100" required
-                      value={scores[ind.id] || ""}
-                      onChange={(e) => handleScoreChange(ind.id, e.target.value)}
-                      className="w-24 border border-border bg-background rounded-lg px-3 py-2 text-center text-foreground focus:ring-2 focus:ring-primary/50" 
-                      placeholder="0"
-                    />
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
 
-            <div>
-              <h4 className="text-sm font-medium text-purple-400 uppercase tracking-wider mb-3">Indikator Perilaku</h4>
-              <div className="grid grid-cols-1 gap-4">
-                {indicators.filter(i => i.type === "Perilaku").map(ind => (
-                  <div key={ind.id} className="flex items-center gap-4 bg-background/50 p-3 rounded-lg border border-border">
-                    <div className="flex-1">
-                      <div className="text-sm font-medium text-foreground">{ind.name}</div>
-                      <div className="text-xs text-muted-foreground">Bobot: {ind.weight}%</div>
+            {perilakuInd.length > 0 && (
+              <div className="pt-4">
+                <h4 className="text-sm font-bold text-purple-600 uppercase tracking-wider mb-4 flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-purple-500"></span> Indikator Perilaku
+                </h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {perilakuInd.map(ind => (
+                    <div key={ind.id} className="flex items-center gap-4 bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                      <div className="flex-1">
+                        <div className="font-bold text-slate-800">{ind.name}</div>
+                        {ind.description && <div className="text-xs text-slate-500 mt-1">{ind.description}</div>}
+                        <div className="text-xs font-bold text-indigo-600 mt-2 bg-indigo-50 inline-block px-2 py-0.5 rounded-md">Bobot: {ind.weight}%</div>
+                      </div>
+                      <input type="number" min="0" max="100" required
+                        value={scores[ind.id] ?? ""}
+                        onChange={(e) => handleScoreChange(ind.id, e.target.value)}
+                        className="w-24 px-4 py-3 border border-slate-200 bg-slate-50 rounded-xl text-center font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="0" />
                     </div>
-                    <input 
-                      type="number" 
-                      min="0" max="100" required
-                      value={scores[ind.id] || ""}
-                      onChange={(e) => handleScoreChange(ind.id, e.target.value)}
-                      className="w-24 border border-border bg-background rounded-lg px-3 py-2 text-center text-foreground focus:ring-2 focus:ring-primary/50" 
-                      placeholder="0"
-                    />
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
+
           </div>
         </div>
 
-        <div className="pt-4 border-t border-border">
-          <div className="bg-background/80 border border-border p-5 rounded-xl flex items-center justify-between mb-6">
-            <div>
-              <div className="text-sm font-medium text-muted-foreground">Estimasi Skor Akhir</div>
-              <div className="text-xs text-muted-foreground mt-0.5">Rekomendasi: <span className={`font-semibold ${getRecommendation().color}`}>{getRecommendation().label}</span></div>
+        <div className="pt-8 border-t border-slate-100">
+          <div className="bg-slate-50 border border-slate-200 p-8 rounded-[2rem] flex flex-col md:flex-row items-center justify-between mb-8 shadow-inner">
+            <div className="text-center md:text-left mb-4 md:mb-0">
+              <div className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-2">Estimasi Skor Akhir</div>
+              <div className={`inline-flex items-center px-4 py-2 rounded-xl border-2 text-sm font-bold ${getRecommendation().color}`}>
+                Rekomendasi: {getRecommendation().label}
+              </div>
             </div>
-            <div className="text-4xl font-bold text-primary">
+            <div className="text-6xl font-black text-indigo-600 drop-shadow-sm">
               {calculatePreviewScore()}
             </div>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-foreground mb-1">Catatan Penilai (Opsional)</label>
-            <textarea 
-              rows={3} 
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              className="w-full border border-border bg-background rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary" 
-              placeholder="Berikan feedback khusus untuk karyawan..."
+            <label className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 block ml-1">Catatan Penilai (Opsional)</label>
+            <textarea rows={4} value={notes} onChange={(e) => setNotes(e.target.value)}
+              className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-slate-800 font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none shadow-inner" 
+              placeholder="Berikan feedback atau alasan spesifik untuk penilaian karyawan ini..."
             />
           </div>
         </div>
 
-        <div className="flex justify-end pt-4">
-          <button 
-            type="submit" 
-            disabled={isSubmitting}
-            className="px-6 py-2.5 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition-colors shadow-sm disabled:opacity-50"
+        <div className="flex justify-end pt-6">
+          <button type="submit" disabled={isSubmitting}
+            className="px-8 py-4 bg-gradient-to-r from-indigo-600 to-blue-500 text-white rounded-2xl font-bold shadow-xl shadow-indigo-500/25 hover:scale-[1.02] transition-all disabled:opacity-50 disabled:hover:scale-100 text-lg"
           >
-            {isSubmitting ? "Menyimpan..." : "Simpan Penilaian"}
+            {isSubmitting ? "Menyimpan..." : (isEdit ? "Update Penilaian" : "Simpan Penilaian Final")}
           </button>
         </div>
       </form>

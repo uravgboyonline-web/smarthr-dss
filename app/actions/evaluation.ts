@@ -11,6 +11,8 @@ export async function createEvaluation(data: {
   month: number;
   notes: string;
   scores: Record<string, number>;
+  method?: string;
+  aiAnalysis?: string;
 }) {
   // Look up evaluator by email to avoid stale session ID issues
   const evaluator = await prisma.user.findUnique({
@@ -66,34 +68,89 @@ export async function createEvaluation(data: {
   else if (totalWeightedScore >= 55) recommendation = "Pertahankan";
   else recommendation = "Pelatihan / Evaluasi Ulang";
 
-  const evaluation = await prisma.evaluation.create({
-    data: {
-      employeeId: data.employeeId,
-      evaluatorId: evaluator.id,
-      periodId: period.id,
-      notes: data.notes,
-      totalScore: totalWeightedScore,
-      recommendation,
-      details: {
-        create: detailsData,
-      },
-    },
-    include: {
-      employee: true,
-    }
+  const existingEval = await prisma.evaluation.findUnique({
+    where: { employeeId_periodId: { employeeId: data.employeeId, periodId: period.id } }
   });
 
-  await createAuditLog({
-    userId: evaluator.id,
-    action: "CREATE",
-    entity: "Evaluation",
-    entityId: evaluation.id,
-    details: `Melakukan penilaian untuk karyawan: ${evaluation.employee.name} dengan skor ${totalWeightedScore.toFixed(1)}`,
-  });
+  let evaluation;
+  if (existingEval) {
+    // Delete old details
+    await prisma.evaluationDetail.deleteMany({ where: { evaluationId: existingEval.id } });
+    
+    evaluation = await prisma.evaluation.update({
+      where: { id: existingEval.id },
+      data: {
+        evaluatorId: evaluator.id,
+        notes: data.notes,
+        totalScore: totalWeightedScore,
+        recommendation,
+        method: data.method || "Manual",
+        aiAnalysis: data.aiAnalysis || null,
+        details: {
+          create: detailsData,
+        },
+      },
+      include: { employee: true }
+    });
+
+    await createAuditLog({
+      userId: evaluator.id,
+      action: "UPDATE",
+      entity: "Evaluation",
+      entityId: evaluation.id,
+      details: `Mengubah penilaian untuk karyawan: ${evaluation.employee.name} menjadi skor ${totalWeightedScore.toFixed(1)}`,
+    });
+  } else {
+    evaluation = await prisma.evaluation.create({
+      data: {
+        employeeId: data.employeeId,
+        evaluatorId: evaluator.id,
+        periodId: period.id,
+        notes: data.notes,
+        totalScore: totalWeightedScore,
+        recommendation,
+        method: data.method || "Manual",
+        aiAnalysis: data.aiAnalysis || null,
+        details: {
+          create: detailsData,
+        },
+      },
+      include: { employee: true }
+    });
+
+    await createAuditLog({
+      userId: evaluator.id,
+      action: "CREATE",
+      entity: "Evaluation",
+      entityId: evaluation.id,
+      details: `Melakukan penilaian untuk karyawan: ${evaluation.employee.name} dengan skor ${totalWeightedScore.toFixed(1)}`,
+    });
+  }
 
   revalidatePath("/dashboard");
   revalidatePath("/dashboard/evaluations");
   revalidatePath("/dashboard/reports");
+}
+
+export async function checkExistingEvaluation(employeeId: string, year: number, month: number) {
+  const monthNames = [
+    "Januari", "Februari", "Maret", "April", "Mei", "Juni",
+    "Juli", "Agustus", "September", "Oktober", "November", "Desember"
+  ];
+  const periodName = `Periode ${monthNames[month - 1]} ${year}`;
+  
+  const period = await prisma.evaluationPeriod.findFirst({
+    where: { periodName }
+  });
+
+  if (!period) return null;
+
+  const existing = await prisma.evaluation.findUnique({
+    where: { employeeId_periodId: { employeeId, periodId: period.id } },
+    include: { details: true }
+  });
+
+  return existing;
 }
 
 export async function getEvaluationData() {
