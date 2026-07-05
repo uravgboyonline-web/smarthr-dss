@@ -32,6 +32,7 @@ export async function getReportData() {
     totalScore: ev.totalScore.toFixed(1),
     recommendation: ev.recommendation || "-",
     notes: ev.notes || "-",
+    aiAnalysis: ev.aiAnalysis || "",
     createdAt: ev.createdAt.toISOString().split("T")[0],
     details: ev.details.map((d) => ({
       indicatorName: d.indicator.name,
@@ -39,6 +40,7 @@ export async function getReportData() {
       weight: d.indicator.weight,
       score: d.score,
       weightedScore: d.weightedScore.toFixed(1),
+      subScores: d.subScores || null,
     })),
   }));
 

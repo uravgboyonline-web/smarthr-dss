@@ -43,9 +43,11 @@ model Indicator {
   name              String
   type              String             // Kinerja / Perilaku / Leadership
   weight            Float
+  minTarget         Float              @default(0)
   description       String?
   status            String             @default("Aktif") // Aktif / Nonaktif
   evaluationMethod  String             @default("Manual") // Manual / AI / Hybrid
+  subIndicators     String?            @db.Text // JSON string: [{ name: "Sub 1", maxScore: 6 }]
   evaluationDetails EvaluationDetail[]
   createdAt         DateTime           @default(now())
   updatedAt         DateTime           @updatedAt
@@ -90,6 +92,7 @@ model EvaluationDetail {
   indicator      Indicator   @relation(fields: [indicatorId], references: [id])
   score          Float
   weightedScore  Float
+  subScores      String?     @db.Text // JSON string: [ { name: "Sub 1", score: 5 } ]
   createdAt      DateTime    @default(now())
   updatedAt      DateTime    @updatedAt
 }

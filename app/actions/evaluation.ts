@@ -11,10 +11,9 @@ export async function createEvaluation(data: {
   month: number;
   notes: string;
   scores: Record<string, number>;
+  subScoresData?: Record<string, string>;
   method?: string;
-  aiAnalysis?: string;
 }) {
-  // Look up evaluator by email to avoid stale session ID issues
   const evaluator = await prisma.user.findUnique({
     where: { email: data.evaluatorEmail },
   });
@@ -23,7 +22,6 @@ export async function createEvaluation(data: {
     throw new Error("Evaluator tidak ditemukan. Silakan login ulang.");
   }
 
-  // Find or Create the Evaluation Period for the given Year and Month
   const monthNames = [
     "Januari", "Februari", "Maret", "April", "Mei", "Juni",
     "Juli", "Agustus", "September", "Oktober", "November", "Desember"
@@ -48,7 +46,9 @@ export async function createEvaluation(data: {
   const indicators = await prisma.indicator.findMany();
   
   let totalWeightedScore = 0;
-  const detailsData = [];
+  const detailsData: any[] = [];
+  const weakIndicators: string[] = [];
+  const strongIndicators: string[] = [];
 
   for (const indicator of indicators) {
     const rawScore = data.scores[indicator.id] || 0;
@@ -59,14 +59,42 @@ export async function createEvaluation(data: {
       indicatorId: indicator.id,
       score: rawScore,
       weightedScore,
+      subScores: data.subScoresData?.[indicator.id] || null,
     });
+
+    const isWeak = indicator.minTarget > 0 
+      ? (weightedScore < indicator.minTarget) 
+      : (rawScore < 70);
+
+    if (isWeak) {
+      weakIndicators.push(indicator.name);
+    } else if (rawScore >= 85) {
+      strongIndicators.push(indicator.name);
+    }
   }
 
-  let recommendation = "Perlu Perbaikan";
-  if (totalWeightedScore >= 85) recommendation = "Promosi";
-  else if (totalWeightedScore >= 70) recommendation = "Reward";
-  else if (totalWeightedScore >= 55) recommendation = "Pertahankan";
-  else recommendation = "Pelatihan / Evaluasi Ulang";
+  let recommendation = "Evaluasi Ulang";
+  if (totalWeightedScore >= 85) recommendation = "Reward / Promosi";
+  else if (totalWeightedScore >= 70) recommendation = "Dipertahankan";
+  else if (totalWeightedScore >= 50) recommendation = "Pelatihan";
+
+  // Downgrade recommendation if they failed to meet minimal targets on specific indicators
+  if (weakIndicators.length > 0 && (recommendation === "Reward / Promosi" || recommendation === "Dipertahankan")) {
+    recommendation = "Pelatihan";
+  }
+
+  // Build automated analysis
+  let automatedAnalysis = "";
+  if (strongIndicators.length > 0) {
+    automatedAnalysis += `Karyawan menunjukkan performa yang sangat baik pada aspek: ${strongIndicators.join(", ")}.\n`;
+  }
+  if (weakIndicators.length > 0) {
+    automatedAnalysis += `Namun, nilai pada aspek ${weakIndicators.join(", ")} berada di bawah standar.\n\nRekomendasi:\n- Mengikuti pelatihan dan pembinaan khusus untuk aspek ${weakIndicators.join(", ")}\n- Melakukan evaluasi berkala dan monitoring selama 3 bulan ke depan`;
+  }
+  if (!automatedAnalysis) {
+    automatedAnalysis = "Performa karyawan cukup stabil dan memenuhi standar minimal di seluruh aspek.";
+  }
+  const finalAiAnalysis = automatedAnalysis.trim();
 
   const existingEval = await prisma.evaluation.findUnique({
     where: { employeeId_periodId: { employeeId: data.employeeId, periodId: period.id } }
@@ -74,7 +102,6 @@ export async function createEvaluation(data: {
 
   let evaluation;
   if (existingEval) {
-    // Delete old details
     await prisma.evaluationDetail.deleteMany({ where: { evaluationId: existingEval.id } });
     
     evaluation = await prisma.evaluation.update({
@@ -85,10 +112,8 @@ export async function createEvaluation(data: {
         totalScore: totalWeightedScore,
         recommendation,
         method: data.method || "Manual",
-        aiAnalysis: data.aiAnalysis || null,
-        details: {
-          create: detailsData,
-        },
+        aiAnalysis: finalAiAnalysis,
+        details: { create: detailsData },
       },
       include: { employee: true }
     });
@@ -110,10 +135,8 @@ export async function createEvaluation(data: {
         totalScore: totalWeightedScore,
         recommendation,
         method: data.method || "Manual",
-        aiAnalysis: data.aiAnalysis || null,
-        details: {
-          create: detailsData,
-        },
+        aiAnalysis: finalAiAnalysis,
+        details: { create: detailsData },
       },
       include: { employee: true }
     });

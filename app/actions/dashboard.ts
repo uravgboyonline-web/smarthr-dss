@@ -9,6 +9,11 @@ export async function getDashboardStats(year: number = new Date().getFullYear())
 
   const totalCriteria = await prisma.indicator.count();
 
+  const allEmployeesList = await prisma.employee.findMany({
+    where: { status: "Aktif" },
+    select: { id: true, name: true, department: true, position: true }
+  });
+
   // Filter evaluations by year based on the period's startDate
   const evaluations = await prisma.evaluation.findMany({
     where: {
@@ -21,7 +26,11 @@ export async function getDashboardStats(year: number = new Date().getFullYear())
     },
     include: {
       employee: true,
-      period: true
+      period: true,
+      details: true
+    },
+    orderBy: {
+      createdAt: 'desc'
     }
   });
   
@@ -74,12 +83,24 @@ export async function getDashboardStats(year: number = new Date().getFullYear())
   let totalCompanyScore = 0;
   let promotionCount = 0;
   let trainingCount = 0;
+  const promotedEmployeesMap = new Map();
+  const trainingEmployeesMap = new Map();
 
+  // Since we ordered by createdAt desc, the first evaluation seen per employee is their latest.
   evaluations.forEach(ev => {
     totalCompanyScore += ev.totalScore;
-    if (ev.recommendation === "Promosi") promotionCount++;
-    if (ev.recommendation === "Pelatihan / Evaluasi Ulang") trainingCount++;
+    if (ev.recommendation === "Reward / Promosi" || ev.recommendation === "Promosi") {
+      promotionCount++;
+      if (!promotedEmployeesMap.has(ev.employeeId)) promotedEmployeesMap.set(ev.employeeId, { ...ev.employee, latestEvaluation: ev });
+    }
+    if (ev.recommendation === "Pelatihan" || ev.recommendation === "Evaluasi Ulang" || ev.recommendation?.includes("Pelatihan") || ev.recommendation?.includes("Evaluasi")) {
+      trainingCount++;
+      if (!trainingEmployeesMap.has(ev.employeeId)) trainingEmployeesMap.set(ev.employeeId, { ...ev.employee, latestEvaluation: ev });
+    }
   });
+
+  const promotedEmployeesList = Array.from(promotedEmployeesMap.values());
+  const trainingEmployeesList = Array.from(trainingEmployeesMap.values());
 
   const averageCompanyScore = evaluations.length > 0 ? (totalCompanyScore / evaluations.length).toFixed(1) : "0.0";
 
@@ -105,7 +126,10 @@ export async function getDashboardStats(year: number = new Date().getFullYear())
     topEmployees,
     departmentScores,
     recentActivities,
-    year
+    year,
+    allEmployeesList,
+    promotedEmployeesList,
+    trainingEmployeesList
   };
 }
 
@@ -150,9 +174,10 @@ export async function getEmployeeDashboardStats(userId: string, year: number = n
 
   let recommendation = "Belum Ada Penilaian";
   if (evaluations.length > 0) {
-    if (averageScore >= 85) recommendation = "DIREKOMENDASIKAN PROMOSI / NAIK JABATAN";
-    else if (averageScore >= 70) recommendation = "DIPERTAHANKAN / KINERJA BAIK";
-    else recommendation = "EVALUASI LANJUT / PERLU PEMBINAAN";
+    if (averageScore >= 85) recommendation = "REWARD / PROMOSI";
+    else if (averageScore >= 70) recommendation = "DIPERTAHANKAN";
+    else if (averageScore >= 50) recommendation = "PELATIHAN";
+    else recommendation = "EVALUASI ULANG";
   }
 
   // Get Top Employees

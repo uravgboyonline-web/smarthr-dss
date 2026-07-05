@@ -16,14 +16,18 @@ export async function createIndicator(formData: FormData) {
   const name = formData.get("name") as string;
   const type = formData.get("type") as string;
   const weight = parseFloat(formData.get("weight") as string);
+  const minTarget = parseFloat(formData.get("minTarget") as string) || 0;
   const description = formData.get("description") as string;
+  const subIndicatorsRaw = formData.get("subIndicators") as string;
 
   const indicator = await prisma.indicator.create({
     data: {
       name,
       type,
       weight,
+      minTarget,
       description,
+      subIndicators: subIndicatorsRaw || null,
     },
   });
 
@@ -38,6 +42,14 @@ export async function createIndicator(formData: FormData) {
     });
   }
 
+  revalidatePath("/dashboard/indicators");
+}
+
+export async function updateIndicatorSubIndicators(id: string, subIndicators: string) {
+  await prisma.indicator.update({
+    where: { id },
+    data: { subIndicators },
+  });
   revalidatePath("/dashboard/indicators");
 }
 

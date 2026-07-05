@@ -29,10 +29,9 @@ export function DashboardClient({
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {[
           { label: "Total Karyawan", value: stats.totalEmployees, icon: Users, color: "blue" },
-          { label: "Rata-Rata Skor Perusahaan", value: stats.averageCompanyScore, icon: BarChart, color: "indigo" },
           { label: "Karyawan Direkomendasikan Promosi", value: stats.promotionCount, icon: Award, color: "emerald" },
           { label: "Karyawan Perlu Pelatihan", value: stats.trainingCount, icon: AlertTriangle, color: "amber" },
         ].map((item, i) => (
@@ -139,6 +138,159 @@ export function DashboardClient({
               )}
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* All Employees List */}
+      <div className="bg-white border border-slate-100 rounded-[2.5rem] shadow-sm shadow-indigo-900/5 overflow-hidden">
+        <div className="p-8 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+          <div>
+            <h2 className="text-xl font-black text-slate-900 flex items-center gap-2">
+              <Users className="w-6 h-6 text-blue-500" />
+              Daftar Semua Karyawan
+            </h2>
+            <p className="text-sm text-slate-500 mt-1">Daftar seluruh karyawan aktif di perusahaan</p>
+          </div>
+        </div>
+        <div className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {stats.allEmployeesList && stats.allEmployeesList.length > 0 ? (
+            stats.allEmployeesList.map((emp: any) => (
+              <div key={emp.id} className="flex items-center gap-4 p-4 rounded-2xl bg-white border border-slate-100 hover:border-blue-100 hover:shadow-md transition-all shadow-sm">
+                <div className="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-lg border border-blue-100 shrink-0">
+                  {emp.name.split(" ").map((n: string) => n[0]).join("").substring(0, 2).toUpperCase()}
+                </div>
+                <div>
+                  <p className="font-bold text-slate-800 leading-tight">{emp.name}</p>
+                  <p className="text-xs text-slate-500 mt-1">{emp.position} · {emp.department}</p>
+                </div>
+              </div>
+            ))
+          ) : (
+            <div className="p-10 text-center text-slate-400 col-span-full">Belum ada karyawan aktif.</div>
+          )}
+        </div>
+      </div>
+
+      {/* Promoted Employees List */}
+      <div className="bg-white border border-slate-100 rounded-[2.5rem] shadow-sm shadow-indigo-900/5 overflow-hidden">
+        <div className="p-8 border-b border-slate-100 flex items-center justify-between bg-emerald-50/50">
+          <div>
+            <h2 className="text-xl font-black text-slate-900 flex items-center gap-2">
+              <Award className="w-6 h-6 text-emerald-500" />
+              Karyawan Direkomendasikan Promosi
+            </h2>
+            <p className="text-sm text-slate-500 mt-1">Daftar karyawan yang direkomendasikan untuk promosi jabatan</p>
+          </div>
+        </div>
+        <div className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {stats.promotedEmployeesList && stats.promotedEmployeesList.length > 0 ? (
+            stats.promotedEmployeesList.map((emp: any) => {
+              const ev = emp.latestEvaluation;
+              return (
+                <div key={emp.id} className="flex flex-col p-5 rounded-2xl bg-white border border-slate-100 hover:border-emerald-200 hover:shadow-md transition-all shadow-sm">
+                  <div className="flex items-center gap-4 mb-4">
+                    <div className="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold text-lg border border-emerald-100 shrink-0">
+                      {emp.name.split(" ").map((n: string) => n[0]).join("").substring(0, 2).toUpperCase()}
+                    </div>
+                    <div>
+                      <p className="font-bold text-slate-800 leading-tight">{emp.name}</p>
+                      <p className="text-xs text-slate-500 mt-1">{emp.position} · {emp.department}</p>
+                    </div>
+                  </div>
+                  {ev && (
+                    <div className="mt-auto bg-slate-50 rounded-xl p-3">
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="text-[10px] font-bold text-slate-400 uppercase">Skor Akhir</span>
+                        <span className="text-sm font-black text-emerald-600">{ev.totalScore} / 100</span>
+                      </div>
+                      <div className="space-y-1.5">
+                        {ev.details?.slice(0, 3).map((d: any, i: number) => {
+                          const ws = parseFloat(d.weightedScore);
+                          const pct = d.weight > 0 ? (ws / d.weight) * 100 : 0;
+                          return (
+                            <div key={i} className="flex justify-between items-center text-[11px]">
+                              <span className="text-slate-600 truncate mr-2" title={d.indicatorName}>• {d.indicatorName}</span>
+                              <span className={`font-bold shrink-0 ${pct >= 85 ? "text-emerald-500" : pct >= 70 ? "text-blue-500" : "text-amber-500"}`}>
+                                {d.weightedScore}/{d.weight}
+                              </span>
+                            </div>
+                          );
+                        })}
+                        {ev.details?.length > 3 && (
+                          <div className="text-[10px] text-slate-400 mt-1 italic text-center">+{ev.details.length - 3} indikator lainnya</div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })
+          ) : (
+            <div className="p-10 text-center text-slate-400 col-span-full">Belum ada karyawan yang direkomendasikan promosi.</div>
+          )}
+        </div>
+      </div>
+
+      {/* Training Employees List */}
+      <div className="bg-white border border-slate-100 rounded-[2.5rem] shadow-sm shadow-indigo-900/5 overflow-hidden">
+        <div className="p-8 border-b border-slate-100 flex items-center justify-between bg-amber-50/50">
+          <div>
+            <h2 className="text-xl font-black text-slate-900 flex items-center gap-2">
+              <AlertTriangle className="w-6 h-6 text-amber-500" />
+              Karyawan Perlu Pelatihan
+            </h2>
+            <p className="text-sm text-slate-500 mt-1">Daftar karyawan yang memerlukan pelatihan tambahan</p>
+          </div>
+        </div>
+        <div className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {stats.trainingEmployeesList && stats.trainingEmployeesList.length > 0 ? (
+            stats.trainingEmployeesList.map((emp: any) => {
+              const ev = emp.latestEvaluation;
+              return (
+                <div key={emp.id} className="flex flex-col p-5 rounded-2xl bg-white border border-slate-100 hover:border-amber-200 hover:shadow-md transition-all shadow-sm">
+                  <div className="flex items-center gap-4 mb-4">
+                    <div className="w-12 h-12 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center font-bold text-lg border border-amber-100 shrink-0">
+                      {emp.name.split(" ").map((n: string) => n[0]).join("").substring(0, 2).toUpperCase()}
+                    </div>
+                    <div>
+                      <p className="font-bold text-slate-800 leading-tight">{emp.name}</p>
+                      <p className="text-xs text-slate-500 mt-1">{emp.position} · {emp.department}</p>
+                    </div>
+                  </div>
+                  {ev && (
+                    <div className="mt-auto bg-slate-50 rounded-xl p-3">
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="text-[10px] font-bold text-slate-400 uppercase">Skor Akhir</span>
+                        <span className="text-sm font-black text-amber-600">{ev.totalScore} / 100</span>
+                      </div>
+                      <div className="space-y-1.5">
+                        {ev.details?.slice(0, 3).map((d: any, i: number) => {
+                          const ws = parseFloat(d.weightedScore);
+                          const pct = d.weight > 0 ? (ws / d.weight) * 100 : 0;
+                          const isLow = pct < 70; // highlight the weak ones
+                          return (
+                            <div key={i} className="flex justify-between items-center text-[11px]">
+                              <span className={`truncate mr-2 ${isLow ? "font-semibold text-red-600" : "text-slate-600"}`} title={d.indicatorName}>
+                                {isLow ? "⚠ " : "• "}{d.indicatorName}
+                              </span>
+                              <span className={`font-bold shrink-0 ${isLow ? "text-red-500" : "text-slate-400"}`}>
+                                {d.weightedScore}/{d.weight}
+                              </span>
+                            </div>
+                          );
+                        })}
+                        {ev.details?.length > 3 && (
+                          <div className="text-[10px] text-slate-400 mt-1 italic text-center">+{ev.details.length - 3} indikator lainnya</div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })
+          ) : (
+            <div className="p-10 text-center text-slate-400 col-span-full">Belum ada karyawan yang memerlukan pelatihan.</div>
+          )}
         </div>
       </div>
     </div>
