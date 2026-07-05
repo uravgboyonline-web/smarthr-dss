@@ -82,7 +82,7 @@ export function EvaluationForm({
   }, [selectedEmployee, selectedYear, selectedMonth]);
 
   // Parse sub-indicators for each indicator
-  const getSubIndicators = (ind: any): { name: string }[] => {
+  const getSubIndicators = (ind: any): { name: string, weight?: number }[] => {
     if (!ind.subIndicators) return [];
     try { return JSON.parse(ind.subIndicators); } catch { return []; }
   };
