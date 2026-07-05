@@ -18,7 +18,7 @@ export function IndicatorTable({ initialIndicators }: { initialIndicators: any[]
   const [filterType, setFilterType] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [indicators, setIndicators] = useState(initialIndicators);
-  const [subItems, setSubItems] = useState<{name: string, weight: string}>([{ name: "", weight: "" }]);
+  const [subItems, setSubItems] = useState<{name: string, weight: string}[]>([{ name: "", weight: "" }]);
   const [expandedIndicator, setExpandedIndicator] = useState<string | null>(null);
   const [editSubItems, setEditSubItems] = useState<{name: string, weight: string}[]>([]);
 
