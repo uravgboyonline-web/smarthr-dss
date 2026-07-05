@@ -147,7 +147,7 @@ export function ReportTable({ reports, periods }: { reports: any[], periods: any
         <p className="text-xs text-slate-500 mb-4">
           Rekomendasi ditentukan otomatis berdasarkan <strong>Total Skor Terbobot Akhir</strong> — 
           yaitu penjumlahan (Nilai Indikator × Bobot%) dari semua indikator. 
-          Jika ada indikator di bawah <em>Target Minimal</em>, rekomendasi diturunkan ke "Pelatihan" meskipun total skor tinggi.
+          Jika ada indikator di bawah <em>Target Minimal</em>, rekomendasi diturunkan ke &quot;Pelatihan&quot; meskipun total skor tinggi.
         </p>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {[
@@ -168,7 +168,7 @@ export function ReportTable({ reports, periods }: { reports: any[], periods: any
         </div>
         <div className="mt-3 pt-3 border-t border-slate-100 text-[11px] text-slate-400">
           <strong>Catatan:</strong> Jika karyawan gagal memenuhi Target Minimal salah satu indikator 
-          (contoh: Bobot 30%, Target Min 20%, capaian hanya 12%), status otomatis turun ke <strong>"Pelatihan"</strong> meskipun total skor akhirnya tinggi.
+          (contoh: Bobot 30%, Target Min 20%, capaian hanya 12%), status otomatis turun ke <strong>&quot;Pelatihan&quot;</strong> meskipun total skor akhirnya tinggi.
         </div>
       </div>
 
@@ -333,7 +333,7 @@ export function ReportTable({ reports, periods }: { reports: any[], periods: any
 
                                 {/* Recommendation Rationale Panel */}
                                 <div className="mt-4 pt-4 border-t border-slate-100">
-                                  <h4 className="text-[10px] font-bold text-indigo-600 uppercase tracking-wider mb-3">📊 Mengapa Rekomendasi "{ev.recommendation}"?</h4>
+                                  <h4 className="text-[10px] font-bold text-indigo-600 uppercase tracking-wider mb-3">📊 Mengapa Rekomendasi &quot;{ev.recommendation}&quot;?</h4>
                                   <div className={`rounded-2xl p-4 border text-sm leading-relaxed ${REC_STYLES[ev.recommendation] || "bg-slate-50 border-slate-200 text-slate-700"}`}>
                                     {/* Summary */}
                                     <p className="font-semibold mb-3">

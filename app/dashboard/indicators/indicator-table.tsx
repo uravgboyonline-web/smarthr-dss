@@ -164,7 +164,7 @@ export function IndicatorTable({ initialIndicators }: { initialIndicators: any[]
               </div>
 
               <div className="flex justify-end gap-3 pt-2">
-                <button type="button" onClick={() => { setIsModalOpen(false); setSubItems([{ name: "" }]); }}
+                <button type="button" onClick={() => { setIsModalOpen(false); setSubItems([{ name: "", weight: "" }]); }}
                   className="px-5 py-2.5 border border-slate-200 rounded-2xl text-slate-600 font-semibold hover:bg-slate-50 transition-all">
                   Batal
                 </button>
